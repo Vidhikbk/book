@@ -2,12 +2,12 @@ import React from "react";
 
 const About = () => {
   return (
-    <div className="bg-linear-to-r from-purple-100 via-pink-50 to-yellow-100 min-h-screen flex flex-col items-center justify-center px-6 py-16">
+    <div className="bg-linear-to-r from-purple-100 via-pink-50 to-yellow-100 min-h-screen flex flex-col items-center  px-6 py-16">
   
      
 
       {/* Content container */}
-      <div className="flex flex-col md:flex-row items-center md:items-start max-w-6xl w-full gap-10">
+      <div className="mt-2 flex flex-col md:flex-row items-center md:items-start max-w-6xl w-full gap-10">
         {/* Illustration */}
         <div className="flex justify-center md:flex-1">
           <img
@@ -18,7 +18,7 @@ const About = () => {
         </div>
 
         {/* Text content */}
-        <div className="md:flex-1 bg-white rounded-2xl shadow-lg p-8 md:p-12">
+        <div className="md:flex-1  rounded-2xl shadow-lg p-8 md:p-12">
           <h2 className="text-2xl md:text-3xl font-bold text-purple-700 mb-6">
             Discover Your Next Favorite Book
           </h2>
