@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { books } from "../data/books";
 import BookCard from "../components/BookCard";
+import SearchBar from "../components/SearchBar";
+import { Select } from "antd";
+
+const { Option } = Select;
 
 function Books() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+
+  // Dynamically get unique categories
+  const categories = Array.from(new Set(books.map((b) => b.category))).sort();
 
   const filteredBooks = books.filter(
     (b) =>
@@ -13,34 +20,47 @@ function Books() {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Books</h1>
+    <div className="bg-linear-to-r from-purple-100 via-pink-100 to-yellow-100 ">
+      <div className=" max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10">
 
-      <div className="flex flex-col md:flex-row md:items-center md:gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search books..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 mb-4 md:mb-0 flex-1"
-        />
-        <select
-          onChange={(e) => setCategory(e.target.value)}
-          value={category}
-          className="border border-gray-300 rounded px-3 py-2"
-        >
-          <option value="">All</option>
-          <option value="Fiction">Fiction</option>
-          <option value="Science">Science</option>
-        </select>
-      </div>
+        {/* Search + Category */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mb-8">
+          <div className="flex-1 w-full sm:w-auto">
+            <SearchBar searchTerm={search} setSearchTerm={setSearch} />
+          </div>
+          <div className="w-full sm:w-56 mt-3 sm:mt-0">
+            <Select
+              allowClear
+              placeholder="Select Category"
+              value={category || undefined}
+              onChange={(value) => setCategory(value || "")}
+              className="w-full rounded-lg"
+              size="large"
+            >
+              {categories.map((cat) => (
+                <Option key={cat} value={cat}>
+                  {cat}
+                </Option>
+              ))}
+            </Select>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredBooks.map((book) => (
-          <BookCard key={book.id} book={book} />
-        ))}
-      </div>
-    </div>
+        {/* Books Flex Container */}
+        {filteredBooks.length > 0 ? (
+          <div className="flex flex-wrap justify-start gap-4 sm:gap-6 md:gap-8">
+            {filteredBooks.map((book) => (
+              <div key={book.id} className="flex shrink-0">
+                <BookCard book={book} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-gray-500 text-base sm:text-lg mt-20">
+            No books found for your search.
+          </div>
+        )}
+      </div></div>
   );
 }
 

@@ -17,171 +17,138 @@ function cleanGutenbergText(text) {
 
 const BookDetails = () => {
     const { id } = useParams();
-    const { addToWishlist, addToSaved } = useContext(BookContext);
+    const {
+        wishlist,
+        addToWishlist,
+        removeFromWishlist,
+        savedBooks,
+        addToSaved,
+        removeFromSaved
+    } = useContext(BookContext);
 
     const book = books.find((b) => b.id === parseInt(id));
-
     const [content, setContent] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [showReader, setShowReader] = useState(false);
     const [expanded, setExpanded] = useState(false);
 
     const paragraphsPerPage = 15;
+    const isInWishlist = wishlist.some(b => b.id === book?.id);
+    const isSaved = savedBooks.some(b => b.id === book?.id);
 
-    // Load book text file
     useEffect(() => {
         const loadBook = async () => {
             if (!book || !book.localFile) return;
-
             try {
                 const res = await fetch(book.localFile);
                 const text = await res.text();
                 const cleaned = cleanGutenbergText(text);
                 const normalized = cleaned.replace(/\r\n/g, "\n").trim();
                 const paragraphs = normalized.split("\n\n");
-
                 const pages = [];
                 for (let i = 0; i < paragraphs.length; i += paragraphsPerPage) {
                     pages.push(paragraphs.slice(i, i + paragraphsPerPage));
                 }
-
                 setContent(pages);
             } catch (err) {
                 console.error("Error loading book:", err);
             }
         };
-
         loadBook();
     }, [book]);
 
     if (!book) {
         return (
-            <p className="text-center mt-12 text-lg text-gray-500">
-                Book not found.
-            </p>
+            <p className="text-center mt-12 text-lg text-gray-500">Book not found.</p>
         );
     }
 
     const totalPages = content.length;
 
-    // -------------------------------------------------------
-    // UI 1 — SUMMARY PAGE (GOODREADS STYLE)
-    // -------------------------------------------------------
+    // -------------------------
+    // SUMMARY PAGE
+    // -------------------------
     if (!showReader) {
         return (
-            <div className="w-full max-w-4xl mx-auto px-4 py-12">
-                <div className="flex gap-8">
-
+            <div className="w-full max-w-5xl mx-auto px-4 py-6">
+                <div className="flex flex-col md:flex-row gap-8 bg-white shadow-lg rounded-2xl p-6">
                     {/* Book Cover */}
                     <img
                         src={book.cover}
                         alt={book.title}
-                        className="w-48 h-auto rounded shadow"
+                        className="w-56 max-h-72 object-contain rounded-xl shadow-md bg-gray-100"
                     />
 
-                    <div className="flex-1">
+                    {/* Book Info */}
+                    <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-serif font-bold text-gray-900">{book.title}</h1>
+                            <p className="mt-1 text-lg text-gray-600">{book.author}</p>
 
-                        {/* Title + Author */}
-                        <h1 className="text-4xl font-serif font-bold text-gray-900">
-                            {book.title}
-                        </h1>
-                        <p className="mt-1 text-lg text-gray-700 font-medium">
-                            {book.author}
-                        </p>
-
-                        {/* Rating Section */}
-                        <div className="flex items-center gap-3 mt-4">
-                            <div className="flex text-yellow-500 text-xl">★★★★☆</div>
-                            <p className="font-semibold text-gray-800 text-xl">{book.rating}</p>
-                            <p className="text-gray-500 text-sm">
-                                {book.reviews} ratings · {book.reviewCount} reviews
-                            </p>
-                        </div>
-
-                        {/* Description */}
-                        <div className="mt-4 text-gray-800 leading-relaxed">
-                            <p>
-                                {expanded
-                                    ? (book.description || "No description available.")
-                                    : ((book.description || "").slice(0, 250) +
-                                        ((book.description?.length || 0) > 250 ? "..." : ""))
-                                }
-                            </p>
-
-                            {book.description && book.description.length > 250 && (
-                                <button
-                                    className="mt-2 text-gray-600 text-sm underline hover:text-gray-800"
-                                    onClick={() => setExpanded(!expanded)}
-                                >
-                                    {expanded ? "Show less" : "Show more"}
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Genres */}
-                        <div className="mt-4 flex flex-wrap gap-3 text-green-700 font-medium">
-                            {(book.genres || []).map((g, i) => (
-                                <button key={i} className="underline hover:text-green-900 text-sm">
-                                    {g}
-                                </button>
-                            ))}
-                            {book.genres && book.genres.length > 0 && (
-                                <span className="underline text-sm cursor-pointer">...more</span>
-                            )}
-                        </div>
-
-                        {/* Pages + Published */}
-                        <p className="mt-4 text-sm text-gray-700">
-                            {book.pages} pages, ebook
-                            <br />
-                            First published {book.published}
-                        </p>
-
-                        {/* Details dropdown */}
-                        <details className="mt-4 cursor-pointer">
-                            <summary className="text-lg font-semibold text-gray-800 select-none">
-                                Book details & editions
-                            </summary>
-
-                            <div className="mt-2 pl-2 text-gray-600 text-sm">
-                                • ISBN: {book.isbn}<br />
-                                • Language: English<br />
-                                • Category: {book.category}
+                            {/* Rating */}
+                            <div className="flex items-center gap-4 mt-3 text-yellow-400">
+                                <div className="flex">
+                                    {"★".repeat(Math.floor(book.rating)) + "☆".repeat(5 - Math.floor(book.rating))}
+                                </div>
+                                <span className="text-gray-800 font-semibold">{book.rating}</span>
                             </div>
-                        </details>
 
-                        {/* Buttons */}
-                        <div className="mt-6">
+                            {/* Description */}
+                            <div className="mt-4 text-gray-700 leading-relaxed">
+                                <p>
+                                    {expanded ? book.description : `${book.description?.slice(0, 300)}${book.description?.length > 300 ? "..." : ""}`}
+                                </p>
+                                {book.description?.length > 300 && (
+                                    <button
+                                        className="mt-2 text-blue-600 text-sm underline hover:text-blue-800"
+                                        onClick={() => setExpanded(!expanded)}
+                                    >
+                                        {expanded ? "Show less" : "Show more"}
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Genres */}
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                {book.genres?.map((g, i) => (
+                                    <span
+                                        key={i}
+                                        className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full cursor-pointer hover:bg-green-200"
+                                    >
+                                        {g}
+                                    </span>
+                                ))}
+                            </div>
+
+                            {/* Pages & Published */}
+                            <p className="mt-4 text-sm text-gray-500">
+                                {book.pages} pages · eBook<br />
+                                First published {book.published}
+                            </p>
+
+                            {/* Details */}
+                            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 text-sm">
+                                <p><span className="font-semibold">Language:</span> {book.language}</p>
+                                <p><span className="font-semibold">Category:</span> {book.category}</p>
+                                <p><span className="font-semibold">Reading Level:</span> {book.readingLevel}</p>
+                                <p><span className="font-semibold">Credits:</span> {book.credits}</p>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="mt-6 flex flex-col md:flex-row gap-3">
                             <button
-                                onClick={() => addToWishlist(book)}
-                                className="w-56 flex justify-between items-center px-5 py-3 bg-green-600 text-white rounded-full font-semibold hover:bg-green-700"
+                                onClick={() => isInWishlist ? removeFromWishlist(book.id) : addToWishlist(book)}
+                                className={`cursor-pointer flex-1 px-3 py-2 rounded-md text-sm font-medium transition ${isInWishlist ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-cyan-500 text-white hover:bg-cyan-600'}`}
                             >
-                                Want to Read
-                                <span className="text-xl">⌄</span>
+                                {isInWishlist ? "Wishlisted" : "Add to Wishlist"}
                             </button>
-
-                            <button
-                                className="w-56 flex justify-between items-center px-5 py-3 border border-gray-400 rounded-full text-gray-700 mt-3 hover:bg-gray-50"
-                            >
-                                Buy on Amazon
-                                <span className="text-xl">⌄</span>
-                            </button>
-
-                            {/* Start Reading — FIXED BUTTON */}
                             <button
                                 onClick={() => setShowReader(true)}
-                                className="w-56 flex justify-center items-center px-5 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 mt-4"
+                                className="cursor-pointer flex-1 px-3 py-2 bg-purple-500 text-white rounded-md text-sm font-medium hover:bg-purple-600 transition"
                             >
                                 Start Reading
                             </button>
-                        </div>
-
-                        {/* Rate Section */}
-                        <div className="mt-6">
-                            <p className="text-sm text-gray-600 mb-1">Rate this book</p>
-                            <div className="flex text-gray-400 text-3xl gap-2 cursor-pointer">
-                                ★ ★ ★ ★ ★
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -189,54 +156,58 @@ const BookDetails = () => {
         );
     }
 
-    // -------------------------------------------------------
-    // UI 2 — READING MODE
-    // -------------------------------------------------------
-
+    // -------------------------
+    // READING PAGE
+    // -------------------------
     return (
-        <div className="w-full max-w-4xl mx-auto px-4 py-12">
+        <div className="w-full max-w-4xl mx-auto px-4 py-12 space-y-6">
 
             {/* Header */}
-            <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-4">
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">{book.title}</h1>
-                    <p className="text-gray-500 mt-1">{book.author}</p>
+                    <h1 className="text-xl md:text-2xl font-semibold text-gray-900">{book.title}</h1>
+                    <p className="text-gray-500 text-sm mt-1">{book.author}</p>
                 </div>
 
-                <div className="flex gap-3">
+                {/* Reading Buttons */}
+                <div className="flex gap-2 flex-wrap">
                     <button
-                        onClick={() => addToWishlist(book)}
-                        className="flex items-center gap-1 px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
+                        onClick={() => isInWishlist ? removeFromWishlist(book.id) : addToWishlist(book)}
+                        className={`cursor-pointer flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition ${isInWishlist
+                                ? "bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600"
+                                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                            }`}
                     >
-                        <AiOutlineHeart /> Wishlist
+                        <AiOutlineHeart /> {isInWishlist ? "Wishlisted" : "Wishlist"}
                     </button>
 
                     <button
-                        onClick={() => addToSaved(book)}
-                        className="flex items-center gap-1 px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
+                        onClick={() => isSaved ? removeFromSaved(book.id) : addToSaved(book)}
+                        className={`cursor-pointer flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition ${isSaved
+                                ? "bg-purple-500 text-white border-purple-500 hover:bg-purple-600"
+                                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                            }`}
                     >
-                        <AiOutlineSave /> Save
+                        <AiOutlineSave /> {isSaved ? "Saved" : "Save"}
                     </button>
                 </div>
             </div>
 
-            {/* Reading content */}
-            <div className="bg-white p-4 rounded-md shadow-sm max-h-[450px] overflow-y-auto">
+            {/* Reading Content */}
+            <div className="bg-white p-4 rounded-lg shadow-sm max-h-[450px] overflow-y-auto text-sm md:text-base font-serif text-gray-800 leading-relaxed">
                 {content.length > 0 &&
                     content[currentPage].map((para, idx) => (
-                        <p key={idx} className="mb-3 leading-relaxed text-gray-800 font-serif text-base">
-                            {para}
-                        </p>
+                        <p key={idx} className="mb-3">{para}</p>
                     ))
                 }
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-center items-center gap-6 mt-6 text-gray-700 text-sm">
+            <div className="flex justify-center items-center gap-4 text-gray-700 text-sm mt-4">
                 <button
                     onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
                     disabled={currentPage === 0}
-                    className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-40"
+                    className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 transition cursor-pointer"
                 >
                     Previous
                 </button>
@@ -246,21 +217,22 @@ const BookDetails = () => {
                 <button
                     onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))}
                     disabled={currentPage === totalPages - 1}
-                    className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-40"
+                    className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 transition cursor-pointer"
                 >
                     Next
                 </button>
             </div>
 
-            {/* Back button */}
-            <div className="text-center mt-8">
+            {/* Back Button */}
+            <div className="text-center mt-4">
                 <button
                     onClick={() => setShowReader(false)}
-                    className="text-blue-600 hover:underline text-sm"
+                    className="text-blue-600 text-sm cursor-pointer"
                 >
                     ← Back to book info
                 </button>
             </div>
+
         </div>
     );
 };
