@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { BookContext } from "../context/BookContext";
 import { AiFillHeart } from "react-icons/ai";
-import cartoon from '../../src/assets/cartoon_boy.png'
+import cartoon from '../../src/assets/cartoon.png';
 
 const Wishlist = () => {
   const { wishlist, removeFromWishlist } = useContext(BookContext);
@@ -13,6 +13,10 @@ const Wishlist = () => {
     "https://cdn-icons-png.flaticon.com/512/3135/3135712.png",
     "https://cdn-icons-png.flaticon.com/512/1040/1040231.png",
   ];
+
+  // Fixed illustration size
+  const illustrationWidth = "20rem";
+  const illustrationHeight = "30rem";
 
   return (
     <div className="bg-linear-to-r from-purple-100 via-pink-50 to-yellow-100 min-h-screen px-6 py-16 relative flex flex-col items-center">
@@ -33,11 +37,7 @@ const Wishlist = () => {
 
       <div className="max-w-6xl w-full flex flex-col md:flex-row items-start gap-10 relative z-10">
         {/* Book data on LEFT */}
-        <div className="md:flex-1 w-full flex flex-col gap-6">
-          {/* <h2 className="text-2xl md:text-3xl font-bold text-purple-700 mb-6">
-            Your Wishlist
-          </h2> */}
-
+        <div className="md:flex-1 w-full flex flex-col gap-6 max-h-96 overflow-y-scroll hide-scrollbar pr-2">
           {wishlist.length === 0 ? (
             <div className="flex flex-col justify-center items-center h-40">
               <img
@@ -86,14 +86,10 @@ const Wishlist = () => {
           <img
             src={cartoon}
             alt="Books Illustration"
-            className="w-full h-auto
-                object-contain rounded-xl mt-4
-               animate-float-slow transition-transform duration-1000 hover:scale-105"
+            className="rounded-xl animate-float-slow transition-transform duration-1000 hover:scale-105"
+            style={{ width: illustrationWidth, height: illustrationHeight }}
           />
         </div>
-
-
-
       </div>
     </div>
   );
